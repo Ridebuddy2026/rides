@@ -1,0 +1,60 @@
+// This is your Prisma schema file for RideBuddies
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  phone       String?
+  isDriver    Boolean  @default(false)
+  driverLicense String?
+  vehicleModel String?
+  vehicleColor String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rides       Ride[]
+  bookings    Booking[]
+}
+
+model Ride {
+  id              String    @id @default(cuid())
+  from            String
+  to              String
+  departureTime   DateTime
+  seatsTotal      Int
+  seatsAvailable  Int
+  price           Float
+  status          String    @default("active") // active, cancelled, completed
+  description     String?
+  driverId        String
+  driverName      String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  driver          User      @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  bookings        Booking[]
+}
+
+model Booking {
+  id          String    @id @default(cuid())
+  rideId      String
+  userId      String
+  seats       Int
+  status      String    @default("confirmed") // confirmed, cancelled, completed
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  ride        Ride      @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([rideId, userId])
+}
